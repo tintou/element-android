@@ -47,6 +47,7 @@ import im.vector.app.core.extensions.registerStartForActivityResult
 import im.vector.app.core.extensions.setTextOrHide
 import im.vector.app.core.intent.getFilenameFromUri
 import im.vector.app.core.platform.VectorBaseFragment
+import im.vector.app.core.resources.ColorProvider
 import im.vector.app.core.utils.copyToClipboard
 import im.vector.app.core.utils.startSharePlainTextIntent
 import im.vector.app.features.crypto.util.toImageRes
@@ -76,6 +77,7 @@ data class RoomProfileArgs(
 class RoomProfileFragment @Inject constructor(
         private val roomProfileController: RoomProfileController,
         private val avatarRenderer: AvatarRenderer,
+        private val colorProvider: ColorProvider,
         val roomProfileViewModelFactory: RoomProfileViewModel.Factory
 ) : VectorBaseFragment(),
         RoomProfileController.Callback,
@@ -280,7 +282,7 @@ class RoomProfileFragment @Inject constructor(
     override fun onImageReady(image: MultiPickerImageType) {
         val destinationFile = File(requireContext().cacheDir, "${image.displayName}_edited_image_${System.currentTimeMillis()}")
         val uri = image.contentUri
-        createUCropWithDefaultSettings(requireContext(), uri, destinationFile.toUri(), image.displayName)
+        createUCropWithDefaultSettings(colorProvider, uri, destinationFile.toUri(), image.displayName)
                 .withAspectRatio(1f, 1f)
                 .start(requireContext(), this)
     }

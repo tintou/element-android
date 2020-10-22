@@ -121,7 +121,7 @@ class BigImageViewerActivity : VectorBaseActivity() {
     private fun onRoomAvatarSelected(image: MultiPickerImageType) {
         val destinationFile = File(cacheDir, "${image.displayName}_edited_image_${System.currentTimeMillis()}")
         val uri = image.contentUri
-        createUCropWithDefaultSettings(this, uri, destinationFile.toUri(), image.displayName)
+        createUCropWithDefaultSettings(colorProvider, uri, destinationFile.toUri(), image.displayName)
                 .withAspectRatio(1f, 1f)
                 .start(this)
     }
