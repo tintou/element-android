@@ -7,6 +7,7 @@ Features ✨:
 Improvements 🙌:
  - Rework sending Event management (#154)
  - New room creation screen: set topic and avatar in the room creation form (#2078)
+ - Room profile: BigImageViewerActivity now only display the image. Use the room setting to change or delete the room Avatar
 
 Bugfix 🐛:
  - Messages encrypted with no way to decrypt after SDK update from 0.18 to 1.0.0 (#2252)
