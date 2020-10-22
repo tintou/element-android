@@ -18,7 +18,6 @@
 package im.vector.app.features.roomprofile
 
 import android.app.Activity
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -28,13 +27,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.pm.ShortcutManagerCompat
-import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import com.airbnb.mvrx.args
 import com.airbnb.mvrx.fragmentViewModel
 import com.airbnb.mvrx.withState
-import com.yalantis.ucrop.UCrop
 import im.vector.app.R
 import im.vector.app.core.animations.AppBarStateChangeListener
 import im.vector.app.core.animations.MatrixItemAppBarStateChangeListener
@@ -57,8 +54,6 @@ import im.vector.app.features.home.room.list.actions.RoomListQuickActionsBottomS
 import im.vector.app.features.home.room.list.actions.RoomListQuickActionsSharedAction
 import im.vector.app.features.home.room.list.actions.RoomListQuickActionsSharedActionViewModel
 import im.vector.app.features.media.BigImageViewerActivity
-import im.vector.app.features.media.createUCropWithDefaultSettings
-import im.vector.lib.multipicker.entity.MultiPickerImageType
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_matrix_profile.*
 import kotlinx.android.synthetic.main.view_stub_room_profile_header.*
@@ -66,7 +61,6 @@ import org.matrix.android.sdk.api.session.room.notification.RoomNotificationStat
 import org.matrix.android.sdk.api.util.MatrixItem
 import org.matrix.android.sdk.api.util.toMatrixItem
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 @Parcelize
@@ -77,7 +71,7 @@ data class RoomProfileArgs(
 class RoomProfileFragment @Inject constructor(
         private val roomProfileController: RoomProfileController,
         private val avatarRenderer: AvatarRenderer,
-        private val colorProvider: ColorProvider,
+        colorProvider: ColorProvider,
         val roomProfileViewModelFactory: RoomProfileViewModel.Factory
 ) : VectorBaseFragment(),
         RoomProfileController.Callback,
@@ -94,7 +88,7 @@ class RoomProfileFragment @Inject constructor(
 
     override fun getMenuRes() = R.menu.vector_room_profile
 
-    private val galleryOrCameraDialogHelper = GalleryOrCameraDialogHelper(this)
+    private val galleryOrCameraDialogHelper = GalleryOrCameraDialogHelper(this, colorProvider)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -279,33 +273,13 @@ class RoomProfileFragment @Inject constructor(
         }
     }
 
-    override fun onImageReady(image: MultiPickerImageType) {
-        val destinationFile = File(requireContext().cacheDir, "${image.displayName}_edited_image_${System.currentTimeMillis()}")
-        val uri = image.contentUri
-        createUCropWithDefaultSettings(colorProvider, uri, destinationFile.toUri(), image.displayName)
-                .withAspectRatio(1f, 1f)
-                .start(requireContext(), this)
-    }
-
     private val bigImageStartForActivityResult = registerStartForActivityResult { activityResult ->
         if (activityResult.resultCode == Activity.RESULT_OK) {
-            activityResult.data?.let { onAvatarCropped(it.data) }
+            activityResult.data?.let { onImageReady(it.data) }
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        // TODO handle this one (Ucrop lib)
-        @Suppress("DEPRECATION")
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                UCrop.REQUEST_CROP -> data?.let { onAvatarCropped(UCrop.getOutput(it)) }
-            }
-        }
-    }
-
-    private fun onAvatarCropped(uri: Uri?) {
+    override fun onImageReady(uri: Uri?) {
         if (uri != null) {
             roomProfileViewModel.handle(RoomProfileAction.ChangeRoomAvatar(uri, getFilenameFromUri(context, uri)))
         } else {
